@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { todos as data } from '@/data/todo';
 
@@ -32,7 +33,7 @@ export default function Index() {
         <SafeAreaView style={styles.container}>
             <LinearGradient
                 colors={['#241b52ff', '#07031bff', '#000000ff']}
-                start={{ x: 0, y: 0 }}  
+                start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.gradient}
             >
@@ -53,10 +54,18 @@ export default function Index() {
                             <Pressable onPress={() => toggleTodo(item.id)} style={[styles.todoTextContainer, item.completed && styles.completed]}>
                                 <Text style={[styles.todoTitle, item.completed && styles.completedText]}>{item.title}</Text>
                             </Pressable>
-                            <Pressable onPress={() => removeTodo(item.id)} style={styles.removeBtn}>
-                                <Text style={styles.removeTxt}>Remove</Text>
+
+                            <Pressable onPress={() => removeTodo(item.id)} >
+                                <LinearGradient
+                                    colors={['#e64602ff', '#b90101ff', '#4b0404ff']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.removeBtn}
+                                >
+                                    <Text style={styles.removeTxt}><FontAwesome name="remove" size={24} color="black" /></Text>
+                                </LinearGradient>
                             </Pressable>
-                        </View>
+                        </View> 
                     )}
                     style={styles.list}
                     keyboardShouldPersistTaps='handled'
@@ -127,11 +136,10 @@ const styles = StyleSheet.create({
         textDecorationLine: 'line-through',
     },
     removeBtn: {
-        backgroundColor: 'red',
+        backgroundColor: '#7e0707ff',
         paddingHorizontal: 10,
         paddingVertical: 6,
-        borderRadius: 4,
-        marginLeft: 10,
+        borderRadius: "50%",
     },
     removeTxt: {
         color: 'white',
