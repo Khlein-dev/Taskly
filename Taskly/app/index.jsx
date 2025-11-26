@@ -2,6 +2,8 @@ import { View, Text, TextInput, Pressable, StyleSheet, FlatList } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react';
 
+import { LinearGradient } from 'expo-linear-gradient';
+
 import { todos as data } from '@/data/todo';
 
 export default function Index() {
@@ -28,32 +30,38 @@ export default function Index() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.Inputcontainer}>
-                <TextInput style={styles.input} placeholder='Add a Task' placeholderTextColor='gray' value={text} onChangeText={setText} />
-                
-                <Pressable onPress={addTodo} style={styles.addBtn}>
-                    <Text style={styles.addTxt}>Add Todo</Text>
-                </Pressable>
-            </View>
+            <LinearGradient
+                colors={['#241b52ff', '#07031bff', '#000000ff']}
+                start={{ x: 0, y: 0 }}  
+                end={{ x: 1, y: 1 }}
+                style={styles.gradient}
+            >
+                <View style={styles.Inputcontainer}>
+                    <TextInput style={styles.input} placeholder='Add a Task' placeholderTextColor='gray' value={text} onChangeText={setText} />
 
-            {/* Render todo items */}
-            <FlatList
-                data={todos}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.todoItem}>
-                        <Pressable onPress={() => toggleTodo(item.id)} style={[styles.todoTextContainer, item.completed && styles.completed]}>
-                            <Text style={styles.todoTitle}>{item.title}</Text>
-                        </Pressable>
-                        <Pressable onPress={() => removeTodo(item.id)} style={styles.removeBtn}>
-                            <Text style={styles.removeTxt}>Remove</Text>
-                        </Pressable>
-                    </View>
-                )}
-                style={styles.list}
-                keyboardShouldPersistTaps='handled'
-            />
+                    <Pressable onPress={addTodo} style={styles.addBtn}>
+                        <Text style={styles.addTxt}>Add Todo</Text>
+                    </Pressable>
+                </View>
 
+                {/* Render todo items */}
+                <FlatList
+                    data={todos}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.todoItem}>
+                            <Pressable onPress={() => toggleTodo(item.id)} style={[styles.todoTextContainer, item.completed && styles.completed]}>
+                                <Text style={[styles.todoTitle, item.completed && styles.completedText]}>{item.title}</Text>
+                            </Pressable>
+                            <Pressable onPress={() => removeTodo(item.id)} style={styles.removeBtn}>
+                                <Text style={styles.removeTxt}>Remove</Text>
+                            </Pressable>
+                        </View>
+                    )}
+                    style={styles.list}
+                    keyboardShouldPersistTaps='handled'
+                />
+            </LinearGradient>
         </SafeAreaView>
     );
 }
@@ -62,8 +70,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         width: '100%',
+    },
+    gradient: {
+        flex: 1,
         alignItems: 'center',
-        backgroundColor: 'black',   
         padding: 16,
     },
     Inputcontainer: {
@@ -75,7 +85,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         height: 40,
-        backgroundColor: '#222',
+        backgroundColor: '#150f36ff',
         color: 'white',
         paddingHorizontal: 10,
         borderRadius: 4,
@@ -98,7 +108,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#333',
+        backgroundColor: '#0f0832ff',
         padding: 12,
         borderRadius: 4,
         marginBottom: 8,
@@ -112,6 +122,8 @@ const styles = StyleSheet.create({
     },
     completed: {
         opacity: 0.5,
+    },
+    completedText: {
         textDecorationLine: 'line-through',
     },
     removeBtn: {
