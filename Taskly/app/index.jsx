@@ -5,11 +5,21 @@ import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
+import { Inter_500Medium, useFonts} from "@expo-google-fonts/inter";
+
 import { todos as data } from '@/data/todo';
 
 export default function Index() {
     const [todos, setTodos] = useState(data.sort((a, b) => b.id - a.id));
     const [text, setText] = useState('');
+
+    const [loaded, error] = useFonts({
+        Inter_500Medium,
+    });
+
+    if (!loaded && !error) {
+        return null;
+    }
 
     const addTodo = () => {
         if (text.trim()) {
@@ -45,6 +55,8 @@ export default function Index() {
                     </Pressable>
                 </View>
 
+                <Text style={styles.Header}> My Tasks</Text>
+
                 {/* Render todo items */}
                 <FlatList
                     data={todos}
@@ -65,7 +77,7 @@ export default function Index() {
                                     <Text style={styles.removeTxt}><FontAwesome name="remove" size={24} color="black" /></Text>
                                 </LinearGradient>
                             </Pressable>
-                        </View> 
+                        </View>
                     )}
                     style={styles.list}
                     keyboardShouldPersistTaps='handled'
@@ -85,6 +97,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
     },
+    Header: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: 'white',
+        fontFamily: 'Inter_500Medium',
+        letterSpacing: 3,
+        right: 110,
+        marginBottom: 10
+    },
     Inputcontainer: {
         flexDirection: 'row',
         width: '100%',
@@ -96,12 +117,13 @@ const styles = StyleSheet.create({
         height: 40,
         backgroundColor: '#150f36ff',
         color: 'white',
+        fontFamily: 'Inter_500Medium',
         paddingHorizontal: 10,
         borderRadius: 4,
         marginRight: 8,
     },
     addBtn: {
-        backgroundColor: 'purple',
+        backgroundColor: '#150f36ff',
         paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 4,
