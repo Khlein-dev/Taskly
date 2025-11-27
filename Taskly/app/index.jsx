@@ -55,7 +55,7 @@ export default function Index() {
                     </Pressable>
                 </View>
 
-                <Text style={styles.Header}> My Tasks</Text>
+                <Text style={styles.Header}> My Tasks are</Text>
 
                 {/* Render todo items */}
                 <FlatList
