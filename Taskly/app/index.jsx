@@ -54,6 +54,8 @@ export default function Index() {
             color: '#4CAF50', // Green for completed
             legendFontColor: '#FFF',
             legendFontSize: 15,
+
+
         },
         {
             name: 'Incomplete',
@@ -100,9 +102,9 @@ export default function Index() {
                 {/* Donut Chart for Progress */}
                 <View style={styles.chartContainer}>
                     <Text style={styles.progressText}>Progress: {Math.round(progressPercentage)}%</Text>
-                    <PieChart
+                    <PieChart style={styles.chart}
                         data={chartData}
-                        width={screenWidth * 0.8}
+                        width={screenWidth * 120 / 100} // 100% of screen width
                         height={220}
                         chartConfig={{
                             backgroundColor: '#241b52ff',
@@ -209,6 +211,9 @@ const styles = StyleSheet.create({
     chartContainer: {
         alignItems: 'center',
         marginBottom: 20,
+    },
+    chart: {
+        right: 25,
     },
     progressText: {
         color: 'white',
