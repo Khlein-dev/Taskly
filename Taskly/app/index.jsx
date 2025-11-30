@@ -1,33 +1,53 @@
-import { View, Text, TextInput, Pressable, StyleSheet, FlatList, Dimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, FlatList, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
-import { PieChart } from 'react-native-chart-kit'; // For the donut chart
+import { PieChart } from 'react-native-chart-kit';
 import { todos as data } from '@/data/todo';
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 export default function Index() {
     const [todos, setTodos] = useState(data.sort((a, b) => b.id - a.id));
     const [text, setText] = useState('');
-    const [description, setDescription] = useState(''); // New state for description
+    const [description, setDescription] = useState('');
+    const [showSheet, setShowSheet] = useState(false);
 
-    const [loaded, error] = useFonts({
-        Inter_500Medium,
-    });
+    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
-    if (!loaded && !error) {
-        return null;
-    }
+    const [loaded] = useFonts({ Inter_500Medium });
+
+    if (!loaded) return null;
+
+    const animateSheet = (open) => {
+        Animated.timing(slideAnim, {
+            toValue: open ? 0 : screenHeight,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => {
+            if (!open) setShowSheet(false);
+        });
+    };
+
+    const openSheet = () => {
+        setShowSheet(true);
+        animateSheet(true);
+    };
+
+    const closeSheet = () => {
+        animateSheet(false);
+    };
 
     const addTodo = () => {
         if (text.trim()) {
-            const newId = todos.length > 0 ? todos[0].id + 1 : 1;
-            setTodos([{ id: newId, title: text, description: description.trim() || '', completed: false }, ...todos]);
+            const newId = todos.length ? todos[0].id + 1 : 1;
+            setTodos([{ id: newId, title: text, description, completed: false }, ...todos]);
             setText('');
-            setDescription(''); // Reset description
+            setDescription('');
+            closeSheet();
         }
     };
 
@@ -41,231 +61,196 @@ export default function Index() {
         setTodos(todos.filter(todo => todo.id !== id));
     };
 
-    // Calculate progress for the donut chart
-    const completedCount = todos.filter(todo => todo.completed).length;
+    const completedCount = todos.filter(t => t.completed).length;
     const totalCount = todos.length;
-    const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+    const progressPercentage = totalCount ? (completedCount / totalCount) * 100 : 0;
 
-    // Data for the donut chart
     const chartData = [
-        {
-            name: 'Completed',
-            population: completedCount,
-            color: '#4CAF50', // Green for completed
-            legendFontColor: '#FFF',
-            legendFontSize: 15,
-
-
-        },
-        {
-            name: 'Incomplete',
-            population: totalCount - completedCount,
-            color: '#FF5722', // Red for incomplete
-            legendFontColor: '#FFF',
-            legendFontSize: 15,
-        },
+        { name: 'Completed', population: completedCount, color: '#72c717ff', legendFontColor: '#FFF', legendFontSize: 15 },
+        { name: 'Incomplete', population: totalCount - completedCount, color: '#FF5722', legendFontColor: '#FFF', legendFontSize: 15 },
     ];
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient
-                colors={['#241b52ff', '#07031bff', '#000000ff']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradient}
-            >
-                <View style={styles.Inputcontainer}>
-                    <View style={styles.inputGroup}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder='Add a Task Title'
-                            placeholderTextColor='gray'
-                            value={text}
-                            onChangeText={setText}
-                        />
-                        <TextInput
-                            style={[styles.input, styles.descriptionInput]}
-                            placeholder='Add a Description (optional)'
-                            placeholderTextColor='gray'
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                        />
-                    </View>
-                    <Pressable onPress={addTodo} style={styles.addBtn}>
-                        <Text style={styles.addTxt}>Add Todo</Text>
-                    </Pressable>
-                </View>
-
+            <LinearGradient colors={['#241b52', '#07031b', '#000']} style={styles.gradient}>
                 <Text style={styles.Header}>My Tasks are</Text>
 
-                {/* Donut Chart for Progress */}
+                {/* Pie Chart */}
                 <View style={styles.chartContainer}>
                     <Text style={styles.progressText}>Progress: {Math.round(progressPercentage)}%</Text>
-                    <PieChart style={styles.chart}
+
+                    <PieChart
                         data={chartData}
-                        width={screenWidth * 120 / 100} // 100% of screen width
+                        width={screenWidth - 20}
                         height={220}
                         chartConfig={{
-                            backgroundColor: '#241b52ff',
-                            backgroundGradientFrom: '#241b52ff',
-                            backgroundGradientTo: '#07031bff',
-                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                            backgroundColor: '#241b52',
+                            backgroundGradientFrom: '#241b52',
+                            backgroundGradientTo: '#07031b',
+                            color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
+                            labelColor: (opacity = 1) => `rgba(255,255,255,${opacity})`,
                         }}
                         accessor="population"
                         backgroundColor="transparent"
-                        paddingLeft="15"
-                        absolute // Show absolute values
-                        hasLegend={true}
-                        donut // Makes it a donut chart
-                        center={[50, 10]} // Adjust center for donut effect
+                        paddingLeft="20"
+                        absolute
                     />
                 </View>
 
-                {/* Render todo items */}
+                {/* Add Todo Button */}
+                <Pressable onPress={openSheet} style={styles.addButton}>
+                    <Text style={styles.addButtonText}>Add Todo</Text>
+                </Pressable>
+
+                {/* Task List */}
                 <FlatList
                     data={todos}
+                    style={{ width: '100%' }}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <View style={styles.todoItem}>
-                            <Pressable onPress={() => toggleTodo(item.id)} style={[styles.todoTextContainer, item.completed && styles.completed]}>
+                            <Pressable onPress={() => toggleTodo(item.id)} style={[styles.todoTextContainer, item.completed && { opacity: 0.5 }]}>
                                 <Text style={[styles.todoTitle, item.completed && styles.completedText]}>{item.title}</Text>
                                 {item.description ? (
-                                    <Text style={[styles.todoDescription, item.completed && styles.completedText]}>{item.description}</Text>
+                                    <Text style={[styles.todoDescription, item.completed && styles.completedText]}>
+                                        {item.description}
+                                    </Text>
                                 ) : null}
                             </Pressable>
-                            <Pressable onPress={() => removeTodo(item.id)} style={styles.removeBtnContainer}>
-                                <LinearGradient
-                                    colors={['#e64602ff', '#b90101ff', '#4b0404ff']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    style={styles.removeBtn}
-                                >
-                                    <FontAwesome name="remove" size={24} color="white" />
+
+                            <Pressable onPress={() => removeTodo(item.id)}>
+                                <LinearGradient colors={['#e64602', '#b90101', '#4b0404']} style={styles.removeBtn}>
+                                    <FontAwesome name="remove" size={22} color="white" />
                                 </LinearGradient>
                             </Pressable>
                         </View>
                     )}
-                    style={styles.list}
-                    keyboardShouldPersistTaps='handled'
-                    ListEmptyComponent={<Text style={styles.emptyText}>No tasks yet. Add one above!</Text>}
                 />
+
+                {/* SLIDE-UP ABSOLUTE ADD TODO FORM */}
+                {showSheet && (
+                    <Animated.View
+                        style={[
+                            styles.bottomSheet,
+                            { transform: [{ translateY: slideAnim }] }
+                        ]}
+                    >
+                        <Text style={styles.sheetTitle}>Add Todo</Text>
+
+                        <TextInput
+                            style={styles.sheetInput}
+                            placeholder="Task Title"
+                            placeholderTextColor="gray"
+                            value={text}
+                            onChangeText={setText}
+                        />
+
+                        <TextInput
+                            style={[styles.sheetInput, styles.descriptionInput]}
+                            placeholder="Description (optional)"
+                            placeholderTextColor="gray"
+                            value={description}
+                            onChangeText={setDescription}
+                            multiline
+                        />
+
+                        <Pressable style={styles.submitBtn} onPress={addTodo}>
+                            <Text style={styles.submitText}>Submit</Text>
+                        </Pressable>
+
+                        <Pressable style={styles.closeBtn} onPress={closeSheet}>
+                            <Text style={styles.closeText}>Close</Text>
+                        </Pressable>
+                    </Animated.View>
+                )}
             </LinearGradient>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        width: '100%',
-    },
-    gradient: {
-        flex: 1,
-        alignItems: 'center',
-        padding: 16,
-    },
+    container: { flex: 1 },
+    gradient: { flex: 1, alignItems: 'center', padding: 16 },
     Header: {
         fontSize: 32,
-        fontWeight: 'bold',
         color: 'white',
         fontFamily: 'Inter_500Medium',
         letterSpacing: 3,
         marginBottom: 10,
     },
-    Inputcontainer: {
-        flexDirection: 'row',
-        width: '100%',
-        marginBottom: 16,
-        alignItems: 'center',
-    },
-    inputGroup: {
-        flex: 1,
-        marginRight: 8,
-    },
-    input: {
-        height: 40,
-        backgroundColor: '#150f36ff',
-        color: 'white',
-        fontFamily: 'Inter_500Medium',
-        paddingHorizontal: 10,
-        borderRadius: 4,
-        marginBottom: 8,
-    },
-    descriptionInput: {
-        height: 60, // Taller for multiline
-        textAlignVertical: 'top',
-    },
-    addBtn: {
-        backgroundColor: '#150f36ff',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 4,
-        justifyContent: 'center',
-    },
-    addTxt: {
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    chartContainer: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    chart: {
-        right: 25,
-    },
-    progressText: {
-        color: 'white',
-        fontSize: 18,
-        fontFamily: 'Inter_500Medium',
+    chartContainer: { alignItems: 'center', marginBottom: 20 },
+    progressText: { color: 'white', fontSize: 18, fontFamily: 'Inter_500Medium' },
+
+    addButton: {
+        backgroundColor: '#72c717ff',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 6,
         marginBottom: 10,
     },
-    list: {
-        width: '100%',
-    },
+    addButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
     todoItem: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#0f0832ff',
+        backgroundColor: '#0f0832',
         padding: 12,
-        borderRadius: 4,
+        borderRadius: 5,
         marginBottom: 8,
     },
-    todoTextContainer: {
-        flex: 1,
-    },
-    todoTitle: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    todoDescription: {
-        color: 'gray',
-        fontSize: 14,
-        marginTop: 4,
-    },
-    completed: {
-        opacity: 0.5,
-    },
-    completedText: {
-        textDecorationLine: 'line-through',
-    },
-    removeBtnContainer: {
-        marginLeft: 10,
-    },
+    todoTextContainer: { flex: 1 },
+    todoTitle: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    todoDescription: { color: 'gray', marginTop: 4 },
+    completedText: { textDecorationLine: 'line-through' },
+
     removeBtn: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
+        padding: 8,
         borderRadius: 50,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    emptyText: {
-        color: 'gray',
-        fontSize: 16,
-        textAlign: 'center',
-        marginTop: 20,
+
+    /* BOTTOM SHEET */
+    bottomSheet: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#241b52',
+        padding: 20,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        elevation: 20,
     },
+    sheetTitle: {
+        fontSize: 20,
+        color: 'white',
+        fontWeight: 'bold',
+        marginBottom: 15,
+    },
+    sheetInput: {
+        backgroundColor: '#150f36',
+        color: 'white',
+        padding: 10,
+        borderRadius: 6,
+        marginBottom: 12,
+    },
+    descriptionInput: { height: 80, textAlignVertical: 'top' },
+
+    submitBtn: {
+        backgroundColor: '#72c717ff',
+        padding: 12,
+        borderRadius: 6,
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    submitText: { color: 'white', fontWeight: 'bold' },
+
+    closeBtn: {
+        backgroundColor: '#444',
+        padding: 10,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    closeText: { color: 'white' },
 });
