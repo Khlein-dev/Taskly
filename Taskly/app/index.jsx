@@ -2,10 +2,10 @@ import { View, Text, TextInput, Pressable, StyleSheet, FlatList, Dimensions, Ani
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
 import { PieChart } from 'react-native-chart-kit';
 import { todos as data } from '@/data/todo';
+import Feather from '@expo/vector-icons/Feather';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -67,7 +67,7 @@ export default function Index() {
 
     const chartData = [
         { name: 'Completed', population: completedCount, color: '#72c717ff', legendFontColor: '#FFF', legendFontSize: 15 },
-        { name: 'Incomplete', population: totalCount - completedCount, color: '#FF5722', legendFontColor: '#FFF', legendFontSize: 15 },
+        { name: 'Incomplete', population: totalCount - completedCount, color: '#a10606ff', legendFontColor: '#FFF', legendFontSize: 15 },
     ];
 
     return (
@@ -75,18 +75,16 @@ export default function Index() {
             <LinearGradient colors={['#241b52', '#07031b', '#000']} style={styles.gradient}>
                 <Text style={styles.Header}>My Tasks are</Text>
 
-                {/* Pie Chart */}
-                <View style={styles.chartContainer}>
-                    <Text style={styles.progressText}>Progress: {Math.round(progressPercentage)}%</Text>
-
+                {/* PIECHART WITH GLOW */}
+                <View style={styles.chartGlow}>
                     <PieChart
                         data={chartData}
-                        width={screenWidth - 20}
+                        width={screenWidth - 50}
                         height={220}
                         chartConfig={{
-                            backgroundColor: '#241b52',
-                            backgroundGradientFrom: '#241b52',
-                            backgroundGradientTo: '#07031b',
+                            backgroundColor: '#43358aff',
+                            backgroundGradientFrom: '#43358aff',
+                            backgroundGradientTo: '#43358aff',
                             color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
                             labelColor: (opacity = 1) => `rgba(255,255,255,${opacity})`,
                         }}
@@ -97,12 +95,16 @@ export default function Index() {
                     />
                 </View>
 
-                {/* Add Todo Button */}
-                <Pressable onPress={openSheet} style={styles.addButton}>
-                    <Text style={styles.addButtonText}>Add Todo</Text>
-                </Pressable>
+                <Text style={styles.progressText}>Progress: {Math.round(progressPercentage)}%</Text>
 
-                {/* Task List */}
+                {/* ADD BUTTON WITH GLOW */}
+                <View style={styles.glowWrapper}>
+                    <Pressable onPress={openSheet} style={styles.addButton}>
+                        <Text style={styles.addButtonText}>Add Todo</Text>
+                    </Pressable>
+                </View>
+
+                {/* TASK LIST */}
                 <FlatList
                     data={todos}
                     style={{ width: '100%' }}
@@ -119,15 +121,13 @@ export default function Index() {
                             </Pressable>
 
                             <Pressable onPress={() => removeTodo(item.id)}>
-                                <LinearGradient colors={['#e64602', '#b90101', '#4b0404']} style={styles.removeBtn}>
-                                    <FontAwesome name="remove" size={22} color="white" />
-                                </LinearGradient>
+                                <Feather name="trash-2" size={24} color="#a10606ff" style={{ marginTop: '10px' }} />
                             </Pressable>
                         </View>
                     )}
                 />
 
-                {/* SLIDE-UP ABSOLUTE ADD TODO FORM */}
+                {/* SLIDE-UP ADD TODO FORM */}
                 {showSheet && (
                     <Animated.View
                         style={[
@@ -154,9 +154,12 @@ export default function Index() {
                             multiline
                         />
 
-                        <Pressable style={styles.submitBtn} onPress={addTodo}>
-                            <Text style={styles.submitText}>Submit</Text>
-                        </Pressable>
+                        {/* SUBMIT BUTTON WITH GLOW */}
+                        <View style={styles.glowWrapperSubmit}>
+                            <Pressable style={styles.submitBtn} onPress={addTodo}>
+                                <Text style={styles.submitText}>Submit</Text>
+                            </Pressable>
+                        </View>
 
                         <Pressable style={styles.closeBtn} onPress={closeSheet}>
                             <Text style={styles.closeText}>Close</Text>
@@ -171,6 +174,7 @@ export default function Index() {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     gradient: { flex: 1, alignItems: 'center', padding: 16 },
+
     Header: {
         fontSize: 32,
         color: 'white',
@@ -178,15 +182,56 @@ const styles = StyleSheet.create({
         letterSpacing: 3,
         marginBottom: 10,
     },
-    chartContainer: { alignItems: 'center', marginBottom: 20 },
-    progressText: { color: 'white', fontSize: 18, fontFamily: 'Inter_500Medium' },
+
+    progressText: {
+        color: 'white',
+        fontSize: 18,
+        fontFamily: 'Inter_500Medium',
+        marginBottom: 20,
+    },
+
+    /* PIECHART GLOW */
+    chartGlow: {
+        padding: 5,
+        borderRadius: 10,
+        alignSelf: 'center',
+
+        shadowColor: '#43358aff',
+        shadowOpacity: 0.8,
+        shadowRadius: 35,
+        shadowOffset: { width: 0, height: 0 },
+
+        elevation: 25,
+        marginBottom: 10,
+    },
+
+    /* GLOW WRAPPER FOR BUTTONS */
+    glowWrapper: {
+        shadowColor: '#72c717ff',
+        shadowOpacity: 1,
+        shadowRadius: 15,
+        shadowOffset: { width: 0, height: 0 },
+        elevation: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+
+        glowWrapperSubmit: {
+        shadowColor: '#72c717ff',
+        height: 45,
+        shadowOpacity: 1,
+        shadowRadius: 15,
+        shadowOffset: { width: 0, height: 0 },
+        elevation: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
 
     addButton: {
         backgroundColor: '#72c717ff',
         paddingVertical: 12,
         paddingHorizontal: 20,
         borderRadius: 6,
-        marginBottom: 10,
     },
     addButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 
@@ -198,17 +243,11 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginBottom: 8,
     },
+
     todoTextContainer: { flex: 1 },
     todoTitle: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     todoDescription: { color: 'gray', marginTop: 4 },
     completedText: { textDecorationLine: 'line-through' },
-
-    removeBtn: {
-        padding: 8,
-        borderRadius: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
 
     /* BOTTOM SHEET */
     bottomSheet: {
@@ -216,10 +255,10 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: '#241b52',
+        backgroundColor: '#0f0a2bff',
         padding: 20,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         elevation: 20,
     },
     sheetTitle: {
@@ -239,6 +278,7 @@ const styles = StyleSheet.create({
 
     submitBtn: {
         backgroundColor: '#72c717ff',
+        height: 45,
         padding: 12,
         borderRadius: 6,
         alignItems: 'center',
