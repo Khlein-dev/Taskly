@@ -6,6 +6,8 @@ import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
 import { PieChart } from 'react-native-chart-kit';
 import { todos as data } from '@/data/todo';
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -18,7 +20,11 @@ export default function Index() {
 
     const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
-    const [loaded] = useFonts({ Inter_500Medium });
+    const [loaded] = useFonts({
+        Inter_500Medium,
+        Heavitas: require('@/assets/Fonts/Heavitas.ttf'),
+        Gulam: require('@/assets/Fonts/Gulam.otf'),
+    });
 
     if (!loaded) return null;
 
@@ -66,25 +72,42 @@ export default function Index() {
     const progressPercentage = totalCount ? (completedCount / totalCount) * 100 : 0;
 
     const chartData = [
-        { name: 'Completed', population: completedCount, color: '#72c717ff', legendFontColor: '#FFF', legendFontSize: 15 },
-        { name: 'Incomplete', population: totalCount - completedCount, color: '#a10606ff', legendFontColor: '#FFF', legendFontSize: 15 },
+        {
+            name: 'Completed',
+            population: completedCount,
+            color: '#c34502ff',
+            legendFontColor: '#FFF',
+            legendFontSize: 18,
+        },
+        {
+            name: 'Incomplete',
+            population: totalCount - completedCount,
+            color: '#0c0222ff',
+            legendFontColor: '#FFF',
+            legendFontSize: 18
+        },
     ];
+
 
     return (
         <SafeAreaView style={styles.container}>
             <LinearGradient colors={['#241b52', '#07031b', '#000']} style={styles.gradient}>
-                <Text style={styles.Header}>My Tasks are</Text>
+                <Text style={styles.Header}>TASKLY</Text>
+
+                {/* ADD BUTTON WITH GLOW */}
+                <View style={styles.glowWrapper}>
+                    <Pressable onPress={openSheet} style={styles.addButton}>
+                        <Text style={styles.addButtonText}><FontAwesome name="plus" size={24} color="white" /></Text>
+                    </Pressable>
+                </View>
 
                 {/* PIECHART WITH GLOW */}
                 <View style={styles.chartGlow}>
                     <PieChart
                         data={chartData}
-                        width={screenWidth - 50}
-                        height={220}
+                        width={screenWidth - 10}
+                        height={250}
                         chartConfig={{
-                            backgroundColor: '#43358aff',
-                            backgroundGradientFrom: '#43358aff',
-                            backgroundGradientTo: '#43358aff',
                             color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
                             labelColor: (opacity = 1) => `rgba(255,255,255,${opacity})`,
                         }}
@@ -92,22 +115,19 @@ export default function Index() {
                         backgroundColor="transparent"
                         paddingLeft="20"
                         absolute
+                        fontFamily="Inter_500Medium"
                     />
                 </View>
 
-                <Text style={styles.progressText}>Progress: {Math.round(progressPercentage)}%</Text>
-
-                {/* ADD BUTTON WITH GLOW */}
-                <View style={styles.glowWrapper}>
-                    <Pressable onPress={openSheet} style={styles.addButton}>
-                        <Text style={styles.addButtonText}>Add Todo</Text>
-                    </Pressable>
+                <View style={styles.progressCircle}>
+                    <Text style={styles.progressText}>{Math.round(progressPercentage)}%</Text>
                 </View>
+
 
                 {/* TASK LIST */}
                 <FlatList
                     data={todos}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', borderBlockColor: 'transparent', marginTop: 10 }}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <View style={styles.todoItem}>
@@ -176,38 +196,51 @@ const styles = StyleSheet.create({
     gradient: { flex: 1, alignItems: 'center', padding: 16 },
 
     Header: {
-        fontSize: 32,
+        fontSize: 45,
+        fontFamily: 'Heavitas',
         color: 'white',
-        fontFamily: 'Inter_500Medium',
-        letterSpacing: 3,
+        right: 80,
+        letterSpacing: 6,
         marginBottom: 10,
     },
 
-    progressText: {
+    progressCircle: {
+        position: 'absolute',
+        backgroundColor: '#150f36',
+        borderRadius: 100,
+        width: 160,
+        height: 160,
         color: 'white',
-        fontSize: 18,
+        left: (screenWidth / 2) - 160,
+        top: 135,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 20,
+    },
+    progressText: {
+        textAlign: 'center',
+        color: 'white',
+        fontSize: 40,
         fontFamily: 'Inter_500Medium',
-        marginBottom: 20,
     },
 
     /* PIECHART GLOW */
     chartGlow: {
+        backgroundColor: '#150f36',
         padding: 5,
-        borderRadius: 10,
+        borderTopRightRadius: 100,
+        borderBottomLeftRadius: 100,
         alignSelf: 'center',
-
-        shadowColor: '#43358aff',
-        shadowOpacity: 0.8,
-        shadowRadius: 35,
-        shadowOffset: { width: 0, height: 0 },
-
         elevation: 25,
         marginBottom: 10,
     },
 
     /* GLOW WRAPPER FOR BUTTONS */
     glowWrapper: {
-        shadowColor: '#72c717ff',
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        shadowColor: '#c34502ff',
         shadowOpacity: 1,
         shadowRadius: 15,
         shadowOffset: { width: 0, height: 0 },
@@ -216,8 +249,8 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
 
-        glowWrapperSubmit: {
-        shadowColor: '#72c717ff',
+    glowWrapperSubmit: {
+        shadowColor: '#c34502ff',
         height: 45,
         shadowOpacity: 1,
         shadowRadius: 15,
@@ -228,10 +261,13 @@ const styles = StyleSheet.create({
     },
 
     addButton: {
-        backgroundColor: '#72c717ff',
+        width: 100,
+        backgroundColor: '#c34502ff',
         paddingVertical: 12,
         paddingHorizontal: 20,
         borderRadius: 6,
+        alignContent: 'center',
+        alignItems: 'center',
     },
     addButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 
@@ -277,7 +313,7 @@ const styles = StyleSheet.create({
     descriptionInput: { height: 80, textAlignVertical: 'top' },
 
     submitBtn: {
-        backgroundColor: '#72c717ff',
+        backgroundColor: '#c34502ff',
         height: 45,
         padding: 12,
         borderRadius: 6,
