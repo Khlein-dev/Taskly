@@ -1,8 +1,22 @@
-# TASKLY
+#  TASKLY
+A simple and clean To-Do List app that helps you manage your daily tasks with ease.
 
-A to do list app
+Taskly lets you add, view, and delete tasks in a smooth and organized interface. It also includes a Pie Chart to show your completed vs. pending tasks, giving you a quick view of your progress.
 
-# Features
-- Piechart
-- add Task
-- delete Task
+##  Features
+-  **Pie Chart** – Shows task completion progress  
+-  **Add Task** – Quickly add new tasks  
+-  **Delete Task** – Remove tasks easily  
+-  Clean and simple UI
+
+## Tech Used
+- React Native / Expo  
+- react-native-chart-kit  
+- Expo components & basic hooks  
+
+## How to Run
+```sh
+npm install
+npm start
+cd Taskly
+npx expo start
