@@ -1,95 +1,123 @@
-import { View, Text, TextInput, Pressable, StyleSheet, FlatList, Dimensions, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
+import { Inter_500Medium, useFonts } from '@expo-google-fonts/inter';
 import { PieChart } from 'react-native-chart-kit';
 import { todos as data } from '@/data/todo';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 export default function Index() {
-    const [todos, setTodos] = useState(data.sort((a, b) => b.id - a.id));
-    const [text, setText] = useState('');
-    const [description, setDescription] = useState('');
-    const [showSheet, setShowSheet] = useState(false);
+  const [todos, setTodos] = useState(() => [...data].sort((a, b) => b.id - a.id));
+  const [text, setText] = useState('');
+  const [description, setDescription] = useState('');
+  const [showSheet, setShowSheet] = useState(false);
 
-    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
+  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
-    const [loaded] = useFonts({
-        Inter_500Medium,
-        Heavitas: require('@/assets/Fonts/Heavitas.ttf'),
-        Gulam: require('@/assets/Fonts/Gulam.otf'),
+  const [loaded] = useFonts({
+    Inter_500Medium,
+    Heavitas: require('@/assets/Fonts/Heavitas.ttf'),
+    Gulam: require('@/assets/Fonts/Gulam.otf'),
+  });
+
+  const animateSheet = useCallback(
+    (open) => {
+      Animated.timing(slideAnim, {
+        toValue: open ? 0 : screenHeight,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        if (!open) setShowSheet(false);
+      });
+    },
+    [slideAnim]
+  );
+
+  const openSheet = useCallback(() => {
+    Keyboard.dismiss();
+    setShowSheet(true);
+    animateSheet(true);
+  }, [animateSheet]);
+
+  const closeSheet = useCallback(() => {
+    Keyboard.dismiss();
+    animateSheet(false);
+  }, [animateSheet]);
+
+  const addTodo = useCallback(() => {
+    const title = text.trim();
+    if (!title) return;
+
+    setTodos((prev) => {
+      const maxId = prev.reduce((m, t) => Math.max(m, t.id), 0);
+      const newId = maxId + 1;
+      return [{ id: newId, title, description, completed: false }, ...prev];
     });
 
-    if (!loaded) return null;
+    setText('');
+    setDescription('');
+    closeSheet();
+  }, [text, description, closeSheet]);
 
-    const animateSheet = (open) => {
-        Animated.timing(slideAnim, {
-            toValue: open ? 0 : screenHeight,
-            duration: 300,
-            useNativeDriver: true,
-        }).start(() => {
-            if (!open) setShowSheet(false);
-        });
-    };
+  const toggleTodo = useCallback((id) => {
+    setTodos((prev) =>
+      prev.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
+    );
+  }, []);
 
-    const openSheet = () => {
-        setShowSheet(true);
-        animateSheet(true);
-    };
+  const removeTodo = useCallback((id) => {
+    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  }, []);
 
-    const closeSheet = () => {
-        animateSheet(false);
-    };
+  const completedCount = useMemo(() => todos.filter((t) => t.completed).length, [todos]);
+  const totalCount = todos.length;
+  const progressPercentage = useMemo(() => (totalCount ? (completedCount / totalCount) * 100 : 0), [
+    totalCount,
+    completedCount,
+  ]);
 
-    const addTodo = () => {
-        if (text.trim()) {
-            const newId = todos.length ? todos[0].id + 1 : 1;
-            setTodos([{ id: newId, title: text, description, completed: false }, ...todos]);
-            setText('');
-            setDescription('');
-            closeSheet();
-        }
-    };
+  const chartData = useMemo(
+    () => [
+      {
+        name: 'Completed',
+        population: completedCount,
+        color: '#c34502ff',
+        legendFontColor: '#FFF',
+        legendFontSize: 18,
+      },
+      {
+        name: 'Incomplete',
+        population: totalCount - completedCount,
+        color: '#0c0222ff',
+        legendFontColor: '#FFF',
+        legendFontSize: 18,
+      },
+    ],
+    [completedCount, totalCount]
+  );
 
-    const toggleTodo = (id) => {
-        setTodos(todos.map(todo =>
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        ));
-    };
+  const extraListBottomPadding = 260;
 
-    const removeTodo = (id) => {
-        setTodos(todos.filter(todo => todo.id !== id));
-    };
+  if (!loaded) return null;
 
-    const completedCount = todos.filter(t => t.completed).length;
-    const totalCount = todos.length;
-    const progressPercentage = totalCount ? (completedCount / totalCount) * 100 : 0;
-
-    const chartData = [
-        {
-            name: 'Completed',
-            population: completedCount,
-            color: '#c34502ff',
-            legendFontColor: '#FFF',
-            legendFontSize: 18,
-        },
-        {
-            name: 'Incomplete',
-            population: totalCount - completedCount,
-            color: '#0c0222ff',
-            legendFontColor: '#FFF',
-            legendFontSize: 18
-        },
-    ];
-
-
-    return (
+  return (
         <SafeAreaView style={styles.container}>
             <LinearGradient colors={['#241b52', '#07031b', '#000']} style={styles.gradient}>
                 <Text style={styles.Header}>TASKLY</Text>
@@ -123,15 +151,26 @@ export default function Index() {
                     <Text style={styles.progressText}>{Math.round(progressPercentage)}%</Text>
                 </View>
 
-
                 {/* TASK LIST */}
                 <FlatList
                     data={todos}
                     style={{ width: '100%', borderBlockColor: 'transparent', marginTop: 10 }}
                     keyExtractor={(item) => item.id.toString()}
+                    contentContainerStyle={{ paddingBottom: extraListBottomPadding }}
+                    ListEmptyComponent={
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyTitle}>No tasks yet</Text>
+                            <Text style={styles.emptySubtitle}>Tap + to add your first todo.</Text>
+                        </View>
+                    }
                     renderItem={({ item }) => (
                         <View style={styles.todoItem}>
-                            <Pressable onPress={() => toggleTodo(item.id)} style={[styles.todoTextContainer, item.completed && { opacity: 0.5 }]}>
+                            <Pressable
+                                onPress={() => toggleTodo(item.id)}
+                                style={[styles.todoTextContainer, item.completed && { opacity: 0.5 }]}
+                                accessibilityRole="button"
+                                accessibilityLabel={item.completed ? 'Mark as incomplete' : 'Mark as completed'}
+                            >
                                 <Text style={[styles.todoTitle, item.completed && styles.completedText]}>{item.title}</Text>
                                 {item.description ? (
                                     <Text style={[styles.todoDescription, item.completed && styles.completedText]}>
@@ -140,8 +179,14 @@ export default function Index() {
                                 ) : null}
                             </Pressable>
 
-                            <Pressable onPress={() => removeTodo(item.id)}>
-                                <Feather name="trash-2" size={24} color="#a10606ff" style={{ marginTop: '10px' }} />
+                            <Pressable
+                                onPress={() => removeTodo(item.id)}
+                                hitSlop={10}
+                                accessibilityRole="button"
+                                accessibilityLabel="Delete todo"
+                                style={styles.trashButton}
+                            >
+                                <Feather name="trash-2" size={22} color="#a10606ff" />
                             </Pressable>
                         </View>
                     )}
@@ -149,42 +194,50 @@ export default function Index() {
 
                 {/* SLIDE-UP ADD TODO FORM */}
                 {showSheet && (
-                    <Animated.View
-                        style={[
-                            styles.bottomSheet,
-                            { transform: [{ translateY: slideAnim }] }
-                        ]}
-                    >
-                        <Text style={styles.sheetTitle}>Add Todo</Text>
+                    <>
+                        <Pressable style={styles.sheetOverlay} onPress={closeSheet} />
+                        <Animated.View
+                            style={[styles.bottomSheet, { transform: [{ translateY: slideAnim }] }]}
+                        >
+                            <KeyboardAvoidingView
+                                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                                style={{ width: '100%' }}
+                            >
+                                <Text style={styles.sheetTitle}>Add Todo</Text>
 
-                        <TextInput
-                            style={styles.sheetInput}
-                            placeholder="Task Title"
-                            placeholderTextColor="gray"
-                            value={text}
-                            onChangeText={setText}
-                        />
+                                <TextInput
+                                    style={styles.sheetInput}
+                                    placeholder="Task Title"
+                                    placeholderTextColor="gray"
+                                    value={text}
+                                    onChangeText={setText}
+                                    autoCapitalize="sentences"
+                                    returnKeyType="done"
+                                    onSubmitEditing={addTodo}
+                                />
 
-                        <TextInput
-                            style={[styles.sheetInput, styles.descriptionInput]}
-                            placeholder="Description (optional)"
-                            placeholderTextColor="gray"
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                        />
+                                <TextInput
+                                    style={[styles.sheetInput, styles.descriptionInput]}
+                                    placeholder="Description (optional)"
+                                    placeholderTextColor="gray"
+                                    value={description}
+                                    onChangeText={setDescription}
+                                    multiline
+                                />
 
-                        {/* SUBMIT BUTTON WITH GLOW */}
-                        <View style={styles.glowWrapperSubmit}>
-                            <Pressable style={styles.submitBtn} onPress={addTodo}>
-                                <Text style={styles.submitText}>Submit</Text>
-                            </Pressable>
-                        </View>
+                                {/* SUBMIT BUTTON WITH GLOW */}
+                                <View style={styles.glowWrapperSubmit}>
+                                    <Pressable style={styles.submitBtn} onPress={addTodo}>
+                                        <Text style={styles.submitText}>Submit</Text>
+                                    </Pressable>
+                                </View>
 
-                        <Pressable style={styles.closeBtn} onPress={closeSheet}>
-                            <Text style={styles.closeText}>Close</Text>
-                        </Pressable>
-                    </Animated.View>
+                                <Pressable style={styles.closeBtn} onPress={closeSheet}>
+                                    <Text style={styles.closeText}>Close</Text>
+                                </Pressable>
+                            </KeyboardAvoidingView>
+                        </Animated.View>
+                    </>
                 )}
             </LinearGradient>
         </SafeAreaView>
@@ -285,7 +338,32 @@ const styles = StyleSheet.create({
     todoDescription: { color: 'gray', marginTop: 4 },
     completedText: { textDecorationLine: 'line-through' },
 
+    trashButton: {
+        padding: 6,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+
+    emptyState: {
+        marginTop: 40,
+        padding: 16,
+        backgroundColor: '#0f0832',
+        borderRadius: 10,
+        alignItems: 'center',
+        gap: 6,
+    },
+    emptyTitle: { color: 'white', fontWeight: 'bold', fontSize: 18 },
+    emptySubtitle: { color: 'gray', textAlign: 'center' },
+
     /* BOTTOM SHEET */
+    sheetOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+    },
     bottomSheet: {
         position: 'absolute',
         left: 0,
