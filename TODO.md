@@ -2,7 +2,7 @@
 
 Things to do
 
-- [ ] Review `app/index.jsx` current behavior (already done)
+- [done] Review `app/index.jsx` current behavior (already done)
 - [ ] Implement improvements in `Taskly/app/index.jsx`
   - [ ] Immutable initialization (no mutation of imported `data`)
   - [ ] Safer todo id generation
